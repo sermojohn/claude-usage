@@ -9,3 +9,8 @@ Fake `claude` printing API-key style output (no "Current session"/"Current week"
 ### c06b1add20e9 · root-cause · Parser embeds raw output in error; poll treats every error as transient
 
 `internal/parser/parser.go` returns `fmt.Errorf("no usage data found in output:\n%s", raw)` (per spec line 105, now reversed by operator). `cmd/root.go` `poll` reports every tick error inline and never stops, so a persistent format mismatch loops forever instead of exiting 1.
+
+<!-- fr:journal kind=finding scope=debug id=7872023f35b9 created=2026-10-14T11:52:45+00:00 state=fixed -->
+### 7872023f35b9 · finding [fixed] · Unexpected output → one-line error, exit 1 (also in polling)
+
+Added `parser.ErrUnexpectedOutput` sentinel (no raw output in message; reset-time parse failures wrap it too). `poll` now returns it and stops; transient errors still retry inline. `Execute` prints `error: <msg>` once (cobra SilenceErrors). Spec error-handling section updated. Failing-first tests: `TestParse_UnexpectedOutput_ShortSentinelError`, `TestParse_UnparseableResetTime_IsUnexpectedOutput`, `TestPoll_UnexpectedOutputStopsWithError`. Verified with a fake claude: single run and polling both print one line and exit 1; claude exiting non-zero keeps polling; real claude unaffected.
