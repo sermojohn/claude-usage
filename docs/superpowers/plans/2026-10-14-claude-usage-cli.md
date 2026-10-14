@@ -10,6 +10,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-14-claude-usage-cli-design.md`
 
+**Status:** Complete
+
 ## Global Constraints
 
 - Module name: `claude-usage`
@@ -38,7 +40,7 @@
 **Interfaces:**
 - Produces: `cmd.Execute()` — called by main; `rootCmd` with all four flags registered; `run()` stub returning nil
 
-- [ ] **Step 1: Initialize go module**
+- [x] **Step 1: Initialize go module**
 
 ```bash
 go mod init claude-usage
@@ -46,7 +48,7 @@ go mod init claude-usage
 
 Expected: `go.mod` created with `module claude-usage` and the current Go version.
 
-- [ ] **Step 2: Install dependencies**
+- [x] **Step 2: Install dependencies**
 
 ```bash
 go get github.com/spf13/cobra@latest
@@ -55,7 +57,7 @@ go get github.com/charmbracelet/lipgloss@latest
 
 Expected: `go.sum` created; `go.mod` updated with two `require` entries.
 
-- [ ] **Step 3: Write `main.go`**
+- [x] **Step 3: Write `main.go`**
 
 ```go
 package main
@@ -67,7 +69,7 @@ func main() {
 }
 ```
 
-- [ ] **Step 4: Write `cmd/root.go` scaffold**
+- [x] **Step 4: Write `cmd/root.go` scaffold**
 
 ```go
 package cmd
@@ -109,7 +111,7 @@ func run(cmd *cobra.Command, args []string) error {
 }
 ```
 
-- [ ] **Step 5: Verify build and flags**
+- [x] **Step 5: Verify build and flags**
 
 ```bash
 go build -o claude-usage .
@@ -118,7 +120,7 @@ go build -o claude-usage .
 
 Expected: `--help` output lists `--current-session`, `--weekly-session`, `--polling-interval-seconds`, and `--json`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add main.go go.mod go.sum cmd/root.go
@@ -140,7 +142,7 @@ git commit -m "feat: scaffold cobra CLI with all flags"
   - `func ExecRun(name string, args ...string) (string, error)` — production runner
   - `func Fetch(run RunFunc) (string, error)` — calls `run("claude", "--print", "/cost")`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Create `internal/fetcher/fetcher_test.go`:
 
@@ -199,7 +201,7 @@ func TestFetch_PropagatesError(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2: Run tests to confirm they fail**
+- [x] **Step 2: Run tests to confirm they fail**
 
 ```bash
 go test ./internal/fetcher/... -v
@@ -207,7 +209,7 @@ go test ./internal/fetcher/... -v
 
 Expected: compile error — `fetcher` package does not exist yet.
 
-- [ ] **Step 3: Implement `internal/fetcher/fetcher.go`**
+- [x] **Step 3: Implement `internal/fetcher/fetcher.go`**
 
 ```go
 package fetcher
@@ -246,7 +248,7 @@ func Fetch(run RunFunc) (string, error) {
 }
 ```
 
-- [ ] **Step 4: Run tests to confirm they pass**
+- [x] **Step 4: Run tests to confirm they pass**
 
 ```bash
 go test ./internal/fetcher/... -v
@@ -254,7 +256,7 @@ go test ./internal/fetcher/... -v
 
 Expected: all 3 tests PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add internal/fetcher/
@@ -276,7 +278,7 @@ git commit -m "feat: add fetcher package with injectable runner"
   - `type UsageData struct { Session *UsageEntry; Weekly *UsageEntry; FetchedAt time.Time }`
   - `func Parse(raw string, wantSession, wantWeekly bool, now time.Time) (UsageData, error)`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Create `internal/parser/parser_test.go`:
 
@@ -410,7 +412,7 @@ func TestParse_MalformedOutput_ReturnsError(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2: Run tests to confirm they fail**
+- [x] **Step 2: Run tests to confirm they fail**
 
 ```bash
 go test ./internal/parser/... -v
@@ -418,7 +420,7 @@ go test ./internal/parser/... -v
 
 Expected: compile error — `parser` package does not exist yet.
 
-- [ ] **Step 3: Implement `internal/parser/parser.go`**
+- [x] **Step 3: Implement `internal/parser/parser.go`**
 
 ```go
 package parser
@@ -529,7 +531,7 @@ func parseResetTime(timeStr, tzName string, now time.Time) (time.Time, error) {
 }
 ```
 
-- [ ] **Step 4: Run tests to confirm they pass**
+- [x] **Step 4: Run tests to confirm they pass**
 
 ```bash
 go test ./internal/parser/... -v
@@ -537,7 +539,7 @@ go test ./internal/parser/... -v
 
 Expected: all 8 tests PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add internal/parser/
@@ -556,7 +558,7 @@ git commit -m "feat: add parser with regex extraction and timezone-aware time pa
 - Consumes: `parser.UsageData`, `parser.UsageEntry`
 - Produces: `func Render(data parser.UsageData, asJSON bool) (string, error)`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Create `internal/display/display_test.go`:
 
@@ -702,7 +704,7 @@ func TestRender_Terminal_DaysDuration(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2: Run tests to confirm they fail**
+- [x] **Step 2: Run tests to confirm they fail**
 
 ```bash
 go test ./internal/display/... -v
@@ -710,7 +712,7 @@ go test ./internal/display/... -v
 
 Expected: compile error — `display` package does not exist yet.
 
-- [ ] **Step 3: Implement `internal/display/display.go`**
+- [x] **Step 3: Implement `internal/display/display.go`**
 
 ```go
 package display
@@ -823,7 +825,7 @@ func Render(data parser.UsageData, asJSON bool) (string, error) {
 }
 ```
 
-- [ ] **Step 4: Run tests to confirm they pass**
+- [x] **Step 4: Run tests to confirm they pass**
 
 ```bash
 go test ./internal/display/... -v
@@ -831,7 +833,7 @@ go test ./internal/display/... -v
 
 Expected: all 7 tests PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add internal/display/
@@ -849,7 +851,7 @@ git commit -m "feat: add display package with terminal and JSON rendering"
 - Consumes: `fetcher.Fetch`, `fetcher.ExecRun`, `parser.Parse`, `display.Render`
 - Produces: working binary for all flags and polling modes
 
-- [ ] **Step 1: Replace the run stub in `cmd/root.go`**
+- [x] **Step 1: Replace the run stub in `cmd/root.go`**
 
 The full `cmd/root.go` (replace the entire file):
 
@@ -958,7 +960,7 @@ func clearScreen() {
 }
 ```
 
-- [ ] **Step 2: Build**
+- [x] **Step 2: Build**
 
 ```bash
 go build -o claude-usage .
@@ -966,7 +968,7 @@ go build -o claude-usage .
 
 Expected: compiles with no errors.
 
-- [ ] **Step 3: Run all tests**
+- [x] **Step 3: Run all tests**
 
 ```bash
 go test ./... -v
@@ -974,7 +976,7 @@ go test ./... -v
 
 Expected: all tests in all packages PASS.
 
-- [ ] **Step 4: Smoke test — both rows (default)**
+- [x] **Step 4: Smoke test — both rows (default)**
 
 ```bash
 ./claude-usage
@@ -982,7 +984,7 @@ Expected: all tests in all packages PASS.
 
 Expected: two rows with progress bars, percentages, and reset countdowns for Session and Weekly.
 
-- [ ] **Step 5: Smoke test — session only**
+- [x] **Step 5: Smoke test — session only**
 
 ```bash
 ./claude-usage --current-session
@@ -990,7 +992,7 @@ Expected: two rows with progress bars, percentages, and reset countdowns for Ses
 
 Expected: only the Session row.
 
-- [ ] **Step 6: Smoke test — weekly only**
+- [x] **Step 6: Smoke test — weekly only**
 
 ```bash
 ./claude-usage --weekly-session
@@ -998,7 +1000,7 @@ Expected: only the Session row.
 
 Expected: only the Weekly row.
 
-- [ ] **Step 7: Smoke test — JSON output**
+- [x] **Step 7: Smoke test — JSON output**
 
 ```bash
 ./claude-usage --json
@@ -1006,7 +1008,7 @@ Expected: only the Weekly row.
 
 Expected: valid JSON printed with `fetched_at`, `session`, and `weekly` keys.
 
-- [ ] **Step 8: Smoke test — polling mode**
+- [x] **Step 8: Smoke test — polling mode**
 
 ```bash
 ./claude-usage --polling-interval-seconds 5
@@ -1014,7 +1016,7 @@ Expected: valid JSON printed with `fetched_at`, `session`, and `weekly` keys.
 
 Expected: display redraws in place every 5 seconds. Press Ctrl+C — exits cleanly with no error.
 
-- [ ] **Step 9: Smoke test — JSON polling (no clear)**
+- [x] **Step 9: Smoke test — JSON polling (no clear)**
 
 ```bash
 ./claude-usage --json --polling-interval-seconds 3
@@ -1022,7 +1024,7 @@ Expected: display redraws in place every 5 seconds. Press Ctrl+C — exits clean
 
 Expected: a new JSON object printed every 3 seconds without clearing the terminal. Ctrl+C exits cleanly.
 
-- [ ] **Step 10: Final commit**
+- [x] **Step 10: Final commit**
 
 ```bash
 git add cmd/root.go
