@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -13,6 +14,11 @@ var (
 	sessionRe = regexp.MustCompile(`Current session: (\d+)% used · resets ([A-Za-z]+ \d+ at \d+(?::\d+)?(?:am|pm)) \(([^)]+)\)`)
 	weeklyRe  = regexp.MustCompile(`Current week \(all models\): (\d+)% used · resets ([A-Za-z]+ \d+ at \d+(?::\d+)?(?:am|pm)) \(([^)]+)\)`)
 )
+
+// ErrUnexpectedOutput reports that claude --print "/cost" returned output
+// without the expected usage lines. It is not transient, so callers stop
+// rather than retry.
+var ErrUnexpectedOutput = errors.New(`unexpected output from claude --print "/cost"`)
 
 // UsageEntry holds parsed data for one usage period.
 type UsageEntry struct {
@@ -38,7 +44,7 @@ func Parse(raw string, wantSession, wantWeekly bool, now time.Time) (UsageData, 
 		if m := sessionRe.FindStringSubmatch(raw); m != nil {
 			entry, err := parseEntry(m[1], m[2], m[3], now)
 			if err != nil {
-				return UsageData{}, fmt.Errorf("parsing session entry: %w", err)
+				return UsageData{}, fmt.Errorf("%w: session entry: %v", ErrUnexpectedOutput, err)
 			}
 			data.Session = entry
 			found = true
@@ -49,7 +55,7 @@ func Parse(raw string, wantSession, wantWeekly bool, now time.Time) (UsageData, 
 		if m := weeklyRe.FindStringSubmatch(raw); m != nil {
 			entry, err := parseEntry(m[1], m[2], m[3], now)
 			if err != nil {
-				return UsageData{}, fmt.Errorf("parsing weekly entry: %w", err)
+				return UsageData{}, fmt.Errorf("%w: weekly entry: %v", ErrUnexpectedOutput, err)
 			}
 			data.Weekly = entry
 			found = true
@@ -57,7 +63,7 @@ func Parse(raw string, wantSession, wantWeekly bool, now time.Time) (UsageData, 
 	}
 
 	if !found {
-		return UsageData{}, fmt.Errorf("no usage data found in output:\n%s", raw)
+		return UsageData{}, fmt.Errorf("%w: no usage data found", ErrUnexpectedOutput)
 	}
 
 	return data, nil

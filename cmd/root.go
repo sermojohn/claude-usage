@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -24,15 +25,17 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:          "claude-usage",
-	Short:        "Display Claude CLI session and weekly usage",
-	Args:         cobra.NoArgs,
-	SilenceUsage: true,
-	RunE:         run,
+	Use:           "claude-usage",
+	Short:         "Display Claude CLI session and weekly usage",
+	Args:          cobra.NoArgs,
+	SilenceUsage:  true,
+	SilenceErrors: true,
+	RunE:          run,
 }
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 }
@@ -83,31 +86,41 @@ func run(cmd *cobra.Command, args []string) error {
 	ticker := time.NewTicker(time.Duration(flagPollingIntervalSecs) * time.Second)
 	defer ticker.Stop()
 
-	poll(ctx, ticker.C, doFetch, clearScreen, !flagJSON, os.Stderr)
-	return nil
+	return poll(ctx, ticker.C, doFetch, clearScreen, !flagJSON, os.Stderr)
 }
 
 // poll runs tick once immediately and again on every value from ticks until
-// ctx is done. Errors are reported inline to stderr and never stop the loop.
-// The screen is cleared before each tick only when clearEnabled is set, so
-// JSON polling stays a clean newline-delimited stream.
-func poll(ctx context.Context, ticks <-chan time.Time, tick func() error, clear func(), clearEnabled bool, stderr io.Writer) {
-	once := func() {
+// ctx is done. Transient errors are reported inline to stderr and the loop
+// retries on the next tick; unexpected claude output is not transient, so it
+// stops the loop and is returned. The screen is cleared before each tick only
+// when clearEnabled is set, so JSON polling stays a clean newline-delimited
+// stream.
+func poll(ctx context.Context, ticks <-chan time.Time, tick func() error, clear func(), clearEnabled bool, stderr io.Writer) error {
+	once := func() error {
 		if clearEnabled {
 			clear()
 		}
-		if err := tick(); err != nil {
+		err := tick()
+		if errors.Is(err, parser.ErrUnexpectedOutput) {
+			return err
+		}
+		if err != nil {
 			fmt.Fprintf(stderr, "error: %v\n", err)
 		}
+		return nil
 	}
 
-	once()
+	if err := once(); err != nil {
+		return err
+	}
 	for {
 		select {
 		case <-ticks:
-			once()
+			if err := once(); err != nil {
+				return err
+			}
 		case <-ctx.Done():
-			return
+			return nil
 		}
 	}
 }
