@@ -1,6 +1,8 @@
 package parser_test
 
 import (
+	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -136,5 +138,24 @@ func TestParse_MalformedOutput_ReturnsError(t *testing.T) {
 	_, err := parser.Parse("some unrelated text\nno usage data here", true, true, refNow)
 	if err == nil {
 		t.Fatal("expected error for malformed output, got nil")
+	}
+}
+
+func TestParse_UnexpectedOutput_ShortSentinelError(t *testing.T) {
+	raw := "You are using an API key\nTotal cost: $0.12"
+	_, err := parser.Parse(raw, true, true, refNow)
+	if !errors.Is(err, parser.ErrUnexpectedOutput) {
+		t.Fatalf("err = %v, want ErrUnexpectedOutput", err)
+	}
+	if strings.Contains(err.Error(), "Total cost") || strings.Contains(err.Error(), "\n") {
+		t.Errorf("error message %q must not include the raw output", err.Error())
+	}
+}
+
+func TestParse_UnparseableResetTime_IsUnexpectedOutput(t *testing.T) {
+	raw := "Current session: 50% used · resets Oct 14 at 1:10pm (Mars/Olympus)"
+	_, err := parser.Parse(raw, true, false, refNow)
+	if !errors.Is(err, parser.ErrUnexpectedOutput) {
+		t.Fatalf("err = %v, want ErrUnexpectedOutput", err)
 	}
 }

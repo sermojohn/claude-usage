@@ -4,9 +4,12 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
+
+	"claude-usage/internal/parser"
 )
 
 func runPoll(t *testing.T, ticks int, clearEnabled bool, tick func() error) (clears int, stderr string) {
@@ -16,7 +19,9 @@ func runPoll(t *testing.T, ticks int, clearEnabled bool, tick func() error) (cle
 	var errBuf bytes.Buffer
 	done := make(chan struct{})
 	go func() {
-		poll(ctx, ch, tick, func() { clears++ }, clearEnabled, &errBuf)
+		if err := poll(ctx, ch, tick, func() { clears++ }, clearEnabled, &errBuf); err != nil {
+			t.Errorf("poll returned %v, want nil", err)
+		}
 		close(done)
 	}()
 	for i := 0; i < ticks; i++ {
@@ -63,5 +68,23 @@ func TestPoll_NeverClearsInJSONMode(t *testing.T) {
 	clears, _ := runPoll(t, 2, false, func() error { return nil })
 	if clears != 0 {
 		t.Errorf("cleared %d times in JSON mode, want 0", clears)
+	}
+}
+
+func TestPoll_UnexpectedOutputStopsWithError(t *testing.T) {
+	calls := 0
+	var errBuf bytes.Buffer
+	err := poll(context.Background(), make(chan time.Time), func() error {
+		calls++
+		return fmt.Errorf("%w: no usage lines", parser.ErrUnexpectedOutput)
+	}, func() {}, true, &errBuf)
+	if !errors.Is(err, parser.ErrUnexpectedOutput) {
+		t.Fatalf("poll returned %v, want ErrUnexpectedOutput", err)
+	}
+	if calls != 1 {
+		t.Errorf("tick called %d times, want 1", calls)
+	}
+	if errBuf.Len() != 0 {
+		t.Errorf("stderr = %q, want nothing printed inline", errBuf.String())
 	}
 }

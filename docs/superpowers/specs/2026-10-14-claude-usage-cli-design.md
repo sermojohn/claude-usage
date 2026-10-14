@@ -102,5 +102,5 @@ In polling mode with `--json`, no terminal clear — emits a newline-delimited J
 
 - `claude` binary not in PATH → clear error message, exit 1.
 - `claude --print "/cost"` exits non-zero → surface its stderr, exit 1.
-- Output doesn't match expected patterns → print raw output alongside parse error (helps diagnose format changes), exit 1.
-- Polling mode transient errors → print inline error line, retry on next tick (no crash).
+- Output doesn't match expected patterns → print a one-line error only (no raw output), exit 1 — in polling mode too, since a format mismatch is not transient.
+- Polling mode transient errors (e.g. `claude` exits non-zero) → print inline error line, retry on next tick (no crash).
