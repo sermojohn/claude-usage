@@ -24,6 +24,10 @@ var (
 	flagJSON                bool
 )
 
+// sessionTimeout bounds one /cost turn in polling mode, including the
+// first turn, which also waits for claude to start up.
+const sessionTimeout = 60 * time.Second
+
 var rootCmd = &cobra.Command{
 	Use:           "claude-usage",
 	Short:         "Display Claude CLI session and weekly usage",
@@ -59,11 +63,7 @@ func run(cmd *cobra.Command, args []string) error {
 		showWeekly = true
 	}
 
-	doFetch := func() error {
-		raw, err := fetcher.Fetch(fetcher.ExecRun)
-		if err != nil {
-			return err
-		}
+	render := func(raw string) error {
 		data, err := parser.Parse(raw, showSession, showWeekly, time.Now())
 		if err != nil {
 			return err
@@ -77,11 +77,27 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	if flagPollingIntervalSecs == 0 {
-		return doFetch()
+		raw, err := fetcher.Fetch(fetcher.ExecRun)
+		if err != nil {
+			return err
+		}
+		return render(raw)
 	}
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
+
+	// Polling keeps one claude process open and asks it for /cost on every
+	// tick, instead of cold-starting claude each time.
+	session := fetcher.NewSession(fetcher.ExecStart, sessionTimeout)
+	defer session.Close()
+	doFetch := func() error {
+		raw, err := session.Fetch(ctx)
+		if err != nil {
+			return err
+		}
+		return render(raw)
+	}
 
 	ticker := time.NewTicker(time.Duration(flagPollingIntervalSecs) * time.Second)
 	defer ticker.Stop()
@@ -90,7 +106,7 @@ func run(cmd *cobra.Command, args []string) error {
 }
 
 // poll runs tick once immediately and again on every value from ticks until
-// ctx is done. Transient errors are reported inline to stderr and the loop
+// ctx is done. Errors that arrive once ctx is done are dropped. Transient errors are reported inline to stderr and the loop
 // retries on the next tick; unexpected claude output is not transient, so it
 // stops the loop and is returned. The screen is cleared before each tick only
 // when clearEnabled is set, so JSON polling stays a clean newline-delimited
@@ -101,6 +117,9 @@ func poll(ctx context.Context, ticks <-chan time.Time, tick func() error, clear 
 			clear()
 		}
 		err := tick()
+		if ctx.Err() != nil {
+			return nil
+		}
 		if errors.Is(err, parser.ErrUnexpectedOutput) {
 			return err
 		}

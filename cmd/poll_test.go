@@ -88,3 +88,18 @@ func TestPoll_UnexpectedOutputStopsWithError(t *testing.T) {
 		t.Errorf("stderr = %q, want nothing printed inline", errBuf.String())
 	}
 }
+
+func TestPoll_ErrorAfterCancelIsNotPrinted(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	var errBuf bytes.Buffer
+	err := poll(ctx, make(chan time.Time), func() error {
+		cancel()
+		return context.Canceled
+	}, func() {}, true, &errBuf)
+	if err != nil {
+		t.Fatalf("poll returned %v, want nil", err)
+	}
+	if errBuf.Len() != 0 {
+		t.Errorf("stderr = %q, want nothing printed after cancel", errBuf.String())
+	}
+}

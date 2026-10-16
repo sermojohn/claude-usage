@@ -4,7 +4,9 @@ A small Go CLI that shows your Claude CLI usage: the current session and the
 weekly limit, with progress bars, reset times and a countdown.
 
 It runs `claude --print "/cost"` under the hood, so the [Claude CLI](https://claude.com/claude-code)
-must be installed and logged in.
+must be installed and logged in. When polling, it starts one `claude` process
+and sends it `/cost` on every refresh, instead of starting `claude` again each
+time. `/cost` is answered locally, so polling uses no model tokens.
 
 ## Install
 
@@ -82,7 +84,9 @@ done
 ## Errors
 
 Errors go to stderr. A one-shot run exits with code `1` on failure. In polling
-mode, temporary errors are printed and retried on the next refresh. If
+mode, temporary errors are printed and retried on the next refresh; if the
+`claude` process exits or doesn't answer within 60 seconds, it is stopped and
+a new one is started on the next refresh. If
 `claude` returns output the tool can't parse, polling stops and the tool
 exits with code `1`.
 
