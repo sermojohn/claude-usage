@@ -9,3 +9,8 @@ Report: in polling mode the current session is not shown. Tried at 2026-10-16 ~1
 ### f50988c98248 · ruled-out · Poll loop / render path differs from single-shot
 
 poll() calls the same doFetch closure as single-shot mode (fetch -> Parse -> Render), with the same showSession/showWeekly. Byte captures of both modes show identical rows; the only difference is the clear-screen prefix.
+
+<!-- fr:journal kind=ruled-out scope=debug id=8078472cfaa6 created=2026-10-16T10:07:17+00:00 -->
+### 8078472cfaa6 · ruled-out · Terminal clear sequence or lipgloss TTY behaviour eats the first row
+
+A pty capture shows the Session row written right after `ESC[H ESC[2J` on every tick; the claude subprocess writes nothing to the tty.
