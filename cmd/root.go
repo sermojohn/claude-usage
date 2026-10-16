@@ -41,10 +41,10 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.Flags().BoolVar(&flagCurrentSession, "current-session", false, "Show current session usage")
-	rootCmd.Flags().BoolVar(&flagWeeklySession, "weekly-session", false, "Show weekly usage")
-	rootCmd.Flags().IntVar(&flagPollingIntervalSecs, "polling-interval-seconds", 0, "Poll every N seconds (0 = run once)")
-	rootCmd.Flags().BoolVar(&flagJSON, "json", false, "Output JSON instead of colored terminal")
+	rootCmd.Flags().BoolVarP(&flagCurrentSession, "current-session", "c", false, "Show current session usage")
+	rootCmd.Flags().BoolVarP(&flagWeeklySession, "weekly-session", "w", false, "Show weekly usage")
+	rootCmd.Flags().IntVarP(&flagPollingIntervalSecs, "polling-interval-seconds", "p", 0, "Poll every N seconds (0 = run once)")
+	rootCmd.Flags().BoolVarP(&flagJSON, "json", "j", false, "Output JSON instead of colored terminal")
 }
 
 func run(cmd *cobra.Command, args []string) error {
