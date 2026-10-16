@@ -19,3 +19,8 @@ A pty capture shows the Session row written right after `ESC[H ESC[2J` on every 
 ### 1d4406f33621 · hypothesis · UNCONFIRMED: session line changes format once the 5h window resets; the parser silently drops it
 
 sessionRe only accepts `N% used · resets <Mon D> at <time> (<TZ>)`. If the session line takes another shape (e.g. no active window after a reset, with no `resets` clause), Parse leaves Session nil with no error, because Weekly still matched, so found=true. The installed binary (before 8981a7a) then omits the row entirely, and main shows `--`. A long-running poller is exactly what crosses a window reset, whereas one-off runs usually happen mid-session. I have not captured `claude --print "/cost"` output in the no-active-session state to confirm this.
+
+<!-- fr:journal kind=finding scope=debug id=f3ddadcfef86 created=2026-10-16T10:07:23+00:00 state=open -->
+### f3ddadcfef86 · finding [open] · Poll clears the screen before the fetch, so it is blank for the whole fetch
+
+poll.once() calls clear() before tick(), and `claude --print` takes ~3-5s, so each frame is blank for that long; with an interval near the fetch time the output is visible only briefly. This is real but blanks both rows, so on its own it does not explain the report.
