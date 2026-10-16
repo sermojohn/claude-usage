@@ -24,14 +24,17 @@ Move the `claude-usage` binary somewhere on your `PATH` if you want to run it fr
 claude-usage [flags]
 ```
 
-| Flag | Description |
-|------|-------------|
-| `--current-session` | Show only the current session row |
-| `--weekly-session` | Show only the weekly row |
-| `--polling-interval-seconds N` | Refresh every N seconds (default `0` = run once) |
-| `--json` | Print JSON instead of colored output |
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--current-session` | `-c` | Show only the current session row |
+| `--weekly-session` | `-w` | Show only the weekly row |
+| `--polling-interval-seconds N` | `-p N` | Refresh every N seconds (default `0` = run once) |
+| `--json` | `-j` | Print JSON instead of colored output |
 
 With neither `--current-session` nor `--weekly-session`, both rows are shown.
+
+Short flags can be combined, so `claude-usage -wj -p 30` is the same as
+`claude-usage --weekly-session --json --polling-interval-seconds 30`.
 
 ## Examples
 
