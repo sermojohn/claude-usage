@@ -138,6 +138,25 @@ func TestRender_Terminal_DaysDuration(t *testing.T) {
 	}
 }
 
+func TestRender_Terminal_NilEntryShowsEmptyBar(t *testing.T) {
+	data := parser.UsageData{
+		FetchedAt:   refNow,
+		Weekly:      refData.Weekly,
+		WantSession: true,
+		WantWeekly:  true,
+	}
+	out, err := display.Render(data, false)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "Session") {
+		t.Errorf("output missing 'Session' row: %q", out)
+	}
+	if !strings.Contains(out, "░") {
+		t.Errorf("output missing empty bar char ░ for nil session: %q", out)
+	}
+}
+
 func TestRender_Terminal_OverLimitDoesNotPanic(t *testing.T) {
 	data := parser.UsageData{
 		FetchedAt: refNow,

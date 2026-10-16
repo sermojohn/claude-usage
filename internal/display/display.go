@@ -46,6 +46,14 @@ func formatDuration(d time.Duration) string {
 }
 
 func renderRow(label string, entry *parser.UsageEntry) string {
+	if entry == nil {
+		emptyBar := dimStyle.Render(progressBar(0))
+		return fmt.Sprintf("%s %s  %-5s\n",
+			labelStyle.Render(label),
+			emptyBar,
+			dimStyle.Render("--"),
+		)
+	}
 	bar := colorStyle(entry.Pct).Render(progressBar(entry.Pct))
 	pct := fmt.Sprintf("%d%%", entry.Pct)
 	resetIn := formatDuration(entry.ResetsIn)
@@ -99,10 +107,10 @@ func Render(data parser.UsageData, asJSON bool) (string, error) {
 	}
 
 	var sb strings.Builder
-	if data.Session != nil {
+	if data.Session != nil || data.WantSession {
 		sb.WriteString(renderRow("Session", data.Session))
 	}
-	if data.Weekly != nil {
+	if data.Weekly != nil || data.WantWeekly {
 		sb.WriteString(renderRow("Weekly", data.Weekly))
 	}
 	return sb.String(), nil

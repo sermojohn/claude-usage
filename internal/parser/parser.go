@@ -29,15 +29,17 @@ type UsageEntry struct {
 
 // UsageData holds the parsed output of claude --print "/cost".
 type UsageData struct {
-	Session   *UsageEntry
-	Weekly    *UsageEntry
-	FetchedAt time.Time
+	Session     *UsageEntry
+	Weekly      *UsageEntry
+	FetchedAt   time.Time
+	WantSession bool
+	WantWeekly  bool
 }
 
 // Parse extracts usage data from the raw output of claude --print "/cost".
 // now is used to compute ResetsIn and to infer the reset year.
 func Parse(raw string, wantSession, wantWeekly bool, now time.Time) (UsageData, error) {
-	data := UsageData{FetchedAt: now}
+	data := UsageData{FetchedAt: now, WantSession: wantSession, WantWeekly: wantWeekly}
 	found := false
 
 	if wantSession {
